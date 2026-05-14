@@ -892,7 +892,7 @@ const NotificationBell = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
   );
 };
 
-const Navbar = ({ user, lang, setLang }: { user: any | null, lang: 'en' | 'ar', setLang: (l: 'en' | 'ar') => void }) => {
+const Navbar = ({ user, profile, lang, setLang }: { user: any | null, profile: UserProfile | null, lang: 'en' | 'ar', setLang: (l: 'en' | 'ar') => void }) => {
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const t = translations[lang];
   const location = useLocation();
@@ -942,7 +942,7 @@ const Navbar = ({ user, lang, setLang }: { user: any | null, lang: 'en' | 'ar', 
                 </Link>
                 <Link to="/profile" className="w-10 h-10 rounded-full border border-gray-100 overflow-hidden hover:ring-2 hover:ring-emerald-500 transition-all">
                   <img 
-                    src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=10b981&color=fff`} 
+                    src={profile?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.displayName || user.displayName || 'User')}&background=10b981&color=fff`} 
                     className="w-full h-full object-cover" 
                     alt="Profile" 
                   />
@@ -1130,7 +1130,46 @@ const Home = ({ lang, user }: { lang: 'en' | 'ar', user: any | null }) => {
   );
 };
 
-const AdminDashboard = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
+const WelcomeBanner = ({ profile, lang }: { profile: UserProfile | null, lang: 'en' | 'ar' }) => {
+  const t = translations[lang];
+  return (
+    <div className="relative mb-12 rounded-[2.5rem] bg-emerald-950 overflow-hidden shadow-2xl shadow-emerald-100 p-8 lg:p-12 group">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-800 rounded-full blur-[100px] opacity-20 -mr-48 -mt-48 group-hover:opacity-30 transition-opacity"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-700 rounded-full blur-[100px] opacity-20 -ml-48 -mb-48 group-hover:opacity-30 transition-opacity"></div>
+      
+      <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+        <div className="relative">
+          <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-[2rem] overflow-hidden border-4 border-white/10 ring-4 ring-white/5 shadow-2xl relative z-10">
+            <img 
+              src={profile?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.displayName || 'User')}&background=10b981&color=fff`} 
+              className="w-full h-full object-cover" 
+              alt="Profile" 
+            />
+          </div>
+          <div className="absolute -bottom-2 -right-2 bg-emerald-500 w-8 h-8 rounded-xl border-4 border-emerald-950 flex items-center justify-center z-20 shadow-lg">
+            <CheckCircle2 className="w-4 h-4 text-white" />
+          </div>
+        </div>
+        
+        <div className="text-center md:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-800/50 rounded-full text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-4">
+            <UserIcon className="w-3 h-3" />
+            {lang === 'en' ? 'Verified Agent' : 'وكيل معتمد'}
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight mb-2">
+            {lang === 'en' ? 'Welcome Back,' : 'مرحباً بعودتك،'} <br className="hidden lg:block" />
+            <span className="text-emerald-400">{profile?.displayName || (lang === 'en' ? 'Agent' : 'وكيل')}</span>
+          </h2>
+          <p className="text-emerald-100/60 font-medium text-lg">
+            {profile?.email}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AdminDashboard = ({ user, profile, lang }: { user: any, profile: UserProfile | null, lang: 'en' | 'ar' }) => {
   const t = translations[lang];
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1220,6 +1259,8 @@ const AdminDashboard = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
+      <WelcomeBanner profile={profile} lang={lang} />
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{t.myProperties}</h1>
@@ -2282,6 +2323,8 @@ const ProfilePage = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
+        <WelcomeBanner profile={profile} lang={lang} />
+        
         <header className="mb-12 flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-black text-gray-900 mb-2">{t.personalProfile}</h1>
@@ -2376,6 +2419,7 @@ const ProfilePage = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
 
 export default function App() {
   const [user, setUser] = useState<any | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState<'en' | 'ar'>('en');
 
@@ -2385,6 +2429,26 @@ export default function App() {
     // Listen for auth changes
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
+      if (firebaseUser) {
+        // Fetch/Listen to profile from Firestore
+        const profileRef = doc(db, 'users', firebaseUser.uid);
+        onSnapshot(profileRef, (doc) => {
+          if (doc.exists()) {
+            setProfile(doc.data() as UserProfile);
+          } else {
+            // Handle case where profile doesn't exist yet but user is logged in
+            setProfile({
+              uid: firebaseUser.uid,
+              displayName: firebaseUser.displayName || 'User',
+              email: firebaseUser.email || undefined,
+              photoURL: firebaseUser.photoURL || undefined,
+              role: 'user'
+            });
+          }
+        });
+      } else {
+        setProfile(null);
+      }
       setLoading(false);
     });
 
@@ -2407,6 +2471,7 @@ export default function App() {
       <div className="min-h-screen bg-white font-sans selection:bg-emerald-100 selection:text-emerald-900">
         <Navbar 
           user={user} 
+          profile={profile}
           lang={lang} 
           setLang={setLang} 
         />
@@ -2418,7 +2483,7 @@ export default function App() {
           <Route path="/profile" element={user ? <ProfilePage user={user} lang={lang} /> : <Home lang={lang} user={user} />} />
           
           {/* Protected Admin Routes */}
-          <Route path="/admin" element={user ? <AdminDashboard user={user} lang={lang} /> : <Home lang={lang} user={user} />} />
+          <Route path="/admin" element={user ? <AdminDashboard user={user} profile={profile} lang={lang} /> : <Home lang={lang} user={user} />} />
           <Route path="/admin/new" element={user ? <PropertyForm user={user} lang={lang} /> : <Home lang={lang} user={user} />} />
           <Route path="/admin/edit/:id" element={user ? <PropertyForm user={user} lang={lang} isEdit /> : <Home lang={lang} user={user} />} />
           <Route path="/admin/leads/:id" element={user ? <LeadList user={user} lang={lang} /> : <Home lang={lang} user={user} />} />
