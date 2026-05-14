@@ -1455,16 +1455,19 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
     e.preventDefault();
     setSaving(true);
     
-    const data = {
+    const data: any = {
       ...formData,
       price: parseFloat(formData.price),
       rooms: parseInt(formData.rooms) || 0,
       bathrooms: parseInt(formData.bathrooms) || 0,
       area: parseFloat(formData.area) || 0,
       images: formData.images.filter(img => img.trim() !== ''),
-      ownerId: user.uid,
-      createdAt: isEdit ? undefined : serverTimestamp()
     };
+
+    if (!isEdit) {
+      data.ownerId = user.uid;
+      data.createdAt = serverTimestamp();
+    }
 
     try {
       if (isEdit && id) {
