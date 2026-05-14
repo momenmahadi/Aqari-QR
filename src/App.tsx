@@ -31,7 +31,8 @@ import {
   ArrowLeft,
   Share2,
   Download,
-  CreditCard
+  CreditCard,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -159,6 +160,12 @@ const translations = {
     upgradeSubtitle: 'Get unlimited properties, professional analytics, and custom branding.',
     payNow: 'Pay Now',
     getMoreFeatures: 'Get More Features',
+    notifications: 'Notifications',
+    noNotifications: 'No new notifications',
+    newLeadTitle: 'New Lead Interest',
+    newLeadMessage: '{name} is interested in {property}',
+    markAsRead: 'Mark as read',
+    deleteNotification: 'Delete notification',
   },
   ar: {
     heroTitle: 'اربط عقاراتك برموز QR فوراً',
@@ -280,6 +287,12 @@ const translations = {
     displayName: 'الاسم المعروض',
     saveProfile: 'حفظ الملف الشخصي',
     profileUpdated: 'تم تحديث الملف الشخصي بنجاح',
+    notifications: 'الإشعارات',
+    noNotifications: 'لا توجد إشعارات جديدة',
+    newLeadTitle: 'اهتمام عميل جديد',
+    newLeadMessage: '{name} مهتم بـ {property}',
+    markAsRead: 'تحديد كمقروء',
+    deleteNotification: 'حذف الإشعار',
   }
 };
 
@@ -738,6 +751,147 @@ const AuthPage = ({ lang }: { lang: 'en' | 'ar' }) => {
   );
 };
 
+const NotificationBell = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
+  const t = translations[lang];
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, 'notifications'),
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc'),
+      limit(20)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'notifications');
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAsRead = async (id: string) => {
+    try {
+      await updateDoc(doc(db, 'notifications', id), { read: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `notifications/${id}`);
+    }
+  };
+
+  const deleteNotification = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'notifications', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `notifications/${id}`);
+    }
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all"
+      >
+        <Bell className="w-5 h-5" />
+        {unreadCount > 0 && (
+          <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className={cn(
+              "absolute top-full mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50",
+              lang === 'ar' ? 'left-0' : 'right-0'
+            )}
+          >
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">{t.notifications}</h3>
+              {unreadCount > 0 && (
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  {unreadCount} new
+                </span>
+              )}
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Bell className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">{t.noNotifications}</p>
+                </div>
+              ) : (
+                notifications.map((n) => (
+                  <div 
+                    key={n.id}
+                    className={cn(
+                      "p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors relative group",
+                      !n.read && "bg-emerald-50/30"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        "w-2 h-2 mt-1.5 rounded-full shrink-0",
+                        !n.read ? "bg-emerald-500" : "bg-transparent"
+                      )} />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-gray-900 mb-0.5">{n.title}</p>
+                        <p className="text-xs text-gray-600 leading-relaxed mb-2">{n.message}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-medium text-gray-400">
+                            {formatDate(n.createdAt)}
+                          </span>
+                          {!n.read && (
+                            <button 
+                              onClick={() => markAsRead(n.id)}
+                              className="text-[10px] font-bold text-emerald-600 hover:underline"
+                            >
+                              {t.markAsRead}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => deleteNotification(n.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const Navbar = ({ user, lang, setLang }: { user: any | null, lang: 'en' | 'ar', setLang: (l: 'en' | 'ar') => void }) => {
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const t = translations[lang];
@@ -772,6 +926,7 @@ const Navbar = ({ user, lang, setLang }: { user: any | null, lang: 'en' | 'ar', 
             >
               {lang === 'en' ? 'العربية' : 'English'}
             </button>
+            {user && <NotificationBell user={user} lang={lang} />}
             {user ? (
               <>
                 <button 
@@ -1837,6 +1992,21 @@ const PropertyLanding = ({ lang }: { lang: 'en' | 'ar' }) => {
         phone: leadData.phone,
         createdAt: serverTimestamp()
       });
+
+      // Add Notification for owner
+      if (property?.ownerId) {
+        await addDoc(collection(db, 'notifications'), {
+          userId: property.ownerId,
+          title: translations[lang].newLeadTitle,
+          message: translations[lang].newLeadMessage
+            .replace('{name}', leadData.name || translations[lang].anonymous)
+            .replace('{property}', property.title),
+          type: 'lead',
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      }
+
       setSubmitted(true);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'leads');

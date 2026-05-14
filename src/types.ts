@@ -21,8 +21,19 @@ export interface Property {
 export interface Lead {
   id: string;
   propertyId: string;
+  ownerId: string;
   name?: string;
   phone: string;
+  createdAt: Timestamp;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'lead' | 'system';
+  read: boolean;
   createdAt: Timestamp;
 }
 

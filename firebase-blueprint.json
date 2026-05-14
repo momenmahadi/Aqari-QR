@@ -24,11 +24,26 @@
       "type": "object",
       "properties": {
         "propertyId": { "type": "string", "description": "ID of the property" },
+        "ownerId": { "type": "string", "description": "UID of the agent who owns the property" },
         "name": { "type": "string", "description": "Lead name" },
         "phone": { "type": "string", "description": "Lead phone number" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Submission timestamp" }
       },
-      "required": ["propertyId", "phone"]
+      "required": ["propertyId", "phone", "ownerId"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "An internal notification for a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user to notify" },
+        "title": { "type": "string", "description": "Notification title" },
+        "message": { "type": "string", "description": "Notification message" },
+        "type": { "type": "string", "enum": ["lead", "system"], "description": "Type of notification" },
+        "read": { "type": "boolean", "description": "Whether the notification has been read" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt"]
     },
     "UserProfile": {
       "title": "UserProfile",
@@ -52,6 +67,10 @@
     "leads": {
       "schema": "Lead",
       "description": "Collection of customer leads."
+    },
+    "notifications": {
+      "schema": "Notification",
+      "description": "Collection of internal notifications."
     },
     "users": {
       "schema": "UserProfile",
