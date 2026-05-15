@@ -14,6 +14,7 @@
         "images": { "type": "array", "items": { "type": "string" }, "description": "Array of image URLs" },
         "description": { "type": "string", "description": "Property description" },
         "ownerId": { "type": "string", "description": "UID of the owner" },
+        "visits": { "type": "number", "description": "Total scans/visits to this property" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
       },
       "required": ["title", "price", "location", "ownerId"]
@@ -54,7 +55,8 @@
         "email": { "type": "string", "format": "email", "description": "User email" },
         "displayName": { "type": "string", "description": "User display name" },
         "photoURL": { "type": "string", "description": "User photo URL" },
-        "role": { "type": "string", "enum": ["admin", "user"], "description": "User role" }
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "User role" },
+        "portfolioVisits": { "type": "number", "description": "Total visits to the agent's portfolio" }
       },
       "required": ["uid", "displayName", "role"]
     }

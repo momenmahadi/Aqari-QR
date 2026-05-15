@@ -296,15 +296,6 @@ const translations = {
     searchPlaceholder: 'ابحث عن العقارات بالعنوان أو الموقع...',
     noSearchResults: 'لم يتم العثور على عقارات تطابق بحثك.',
     backToHome: 'العودة للرئيسية',
-    agentPortfolio: 'محفظة العقارات',
-    agentQrCode: 'الرمز الرئيسي للمالك',
-    agentQrDesc: 'هذا الرمز الفريد يربط بجميع عقاراتك. ضعه على بطاقات العمل، موقعك الإلكتروني، أو اللوحات الرئيسية.',
-    portfolioLink: 'رابط المحفظة',
-    viewPortfolio: 'عرض المحفظة',
-    portfolioTitle: 'محفظة عقارات {name}',
-    agentProfile: 'ملف الوكيل',
-    searchPlaceholder: 'البحث عن عقارات بالعنوان أو الموقع...',
-    noSearchResults: 'لم يتم العثور على عقارات تطابق بحثك.',
     profile: 'الملف الشخصي',
     personalProfile: 'الملف الشخصي',
     editProfile: 'تعديل الملف الشخصي',
@@ -930,6 +921,7 @@ const Navbar = ({ user, profile, lang, setLang }: { user: any | null, profile: U
   const t = translations[lang];
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
+  const isPublicView = location.pathname.startsWith('/a/') || location.pathname.startsWith('/p/');
 
   const onLogout = async () => {
     try {
@@ -959,47 +951,51 @@ const Navbar = ({ user, profile, lang, setLang }: { user: any | null, profile: U
             >
               {lang === 'en' ? 'العربية' : 'English'}
             </button>
-            {user && <NotificationBell user={user} lang={lang} />}
-            {user ? (
+            {!isPublicView && (
               <>
-                <button 
-                  onClick={() => setIsQuickAddOpen(true)}
-                  className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-lg shadow-emerald-100 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  {t.newListing}
-                </button>
-                <Link to="/admin" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors flex items-center gap-1.5">
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t.dashboard}</span>
-                </Link>
-                <Link to={`/a/${user.uid}`} className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors flex items-center gap-1.5 border-l border-gray-100 pl-4">
-                  <Building2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t.agentPortfolio}</span>
-                </Link>
-                <Link to="/profile" className="w-10 h-10 rounded-full border border-gray-100 overflow-hidden hover:ring-2 hover:ring-emerald-500 transition-all">
-                  <img 
-                    src={profile?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.displayName || user.displayName || 'User')}&background=10b981&color=fff`} 
-                    className="w-full h-full object-cover" 
-                    alt="Profile" 
-                  />
-                </Link>
-                <button 
-                  onClick={onLogout}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t.logout}</span>
-                </button>
+                {user && <NotificationBell user={user} lang={lang} />}
+                {user ? (
+                  <>
+                    <button 
+                      onClick={() => setIsQuickAddOpen(true)}
+                      className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-lg shadow-emerald-100 transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {t.newListing}
+                    </button>
+                    <Link to="/admin" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors flex items-center gap-1.5">
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span className="hidden sm:inline">{t.dashboard}</span>
+                    </Link>
+                    <Link to={`/a/${user.uid}`} className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors flex items-center gap-1.5 border-l border-gray-100 pl-4">
+                      <Building2 className="w-4 h-4" />
+                      <span className="hidden sm:inline">{t.agentPortfolio}</span>
+                    </Link>
+                    <Link to="/profile" className="w-10 h-10 rounded-full border border-gray-100 overflow-hidden hover:ring-2 hover:ring-emerald-500 transition-all">
+                      <img 
+                        src={profile?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.displayName || user.displayName || 'User')}&background=10b981&color=fff`} 
+                        className="w-full h-full object-cover" 
+                        alt="Profile" 
+                      />
+                    </Link>
+                    <button 
+                      onClick={onLogout}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span className="hidden sm:inline">{t.logout}</span>
+                    </button>
+                  </>
+                ) : (
+                  <Link 
+                    to="/auth"
+                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-lg shadow-emerald-200 transition-all active:scale-95"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    {t.login}
+                  </Link>
+                )}
               </>
-            ) : (
-              <Link 
-                to="/auth"
-                className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-lg shadow-emerald-200 transition-all active:scale-95"
-              >
-                <LogIn className="w-4 h-4" />
-                {t.login}
-              </Link>
             )}
           </div>
         </div>
@@ -1316,7 +1312,11 @@ const AdminDashboard = ({ user, profile, lang }: { user: any, profile: UserProfi
                 <QrCode className="w-3.5 h-3.5" />
                 {t.agentQrCode}
               </div>
-              <h2 className="text-3xl font-black text-gray-900 mb-4">{t.agentPortfolio}</h2>
+              <h2 className="text-3xl font-black text-gray-900 mb-1">{t.agentPortfolio}</h2>
+              <div className="flex items-center gap-2 text-emerald-600 font-bold mb-4">
+                <Eye className="w-4 h-4" />
+                <span>{profile?.portfolioVisits || 0} {t.scans}</span>
+              </div>
               <p className="text-gray-500 text-lg mb-8 max-w-2xl leading-relaxed">
                 {t.agentQrDesc}
               </p>
@@ -1565,6 +1565,15 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
   });
 
   const amenitiesList = ['pool', 'gym', 'parking', 'security', 'garden', 'ac', 'wifi', 'furnished'];
+
+  const toggleAmenity = (amenity: string) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
+    }));
+  };
 
   useEffect(() => {
     if (isEdit && id) {
@@ -2386,9 +2395,16 @@ const AgentPortfolio = ({ lang }: { lang: 'en' | 'ar' }) => {
     const fetchData = async () => {
       try {
         // Fetch Agent
-        const agentSnap = await getDoc(doc(db, 'users', ownerId));
+        const agentRef = doc(db, 'users', ownerId);
+        const agentSnap = await getDoc(agentRef);
         if (agentSnap.exists()) {
-          setAgent(agentSnap.data() as UserProfile);
+          const data = agentSnap.data();
+          setAgent(data as UserProfile);
+          
+          // Increment portfolio visits
+          updateDoc(agentRef, {
+            portfolioVisits: (data.portfolioVisits || 0) + 1
+          }).catch(err => console.warn('Failed to increment portfolio visits:', err));
         }
 
         // Fetch Properties
