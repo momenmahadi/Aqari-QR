@@ -148,6 +148,13 @@ const translations = {
     copied: 'Link Copied!',
     previewOnly: 'Preview Only',
     qrWillWorkAfterSave: 'QR code will link to your property page once created.',
+    agentPortfolio: 'Agent Portfolio',
+    agentQrCode: 'Owner Main QR Code',
+    agentQrDesc: 'This unique QR code links to your entire property portfolio. Place it on your business cards, website, or main signage.',
+    portfolioLink: 'Portfolio Link',
+    viewPortfolio: 'View Portfolio',
+    portfolioTitle: '{name}\'s Property Portfolio',
+    agentProfile: 'Agent Profile',
     searchPlaceholder: 'Search properties by title or location...',
     noSearchResults: 'No properties found matching your search.',
     backToHome: 'Back to Home',
@@ -279,9 +286,25 @@ const translations = {
     copied: 'تم نسخ الرابط!',
     previewOnly: 'معاينة فقط',
     qrWillWorkAfterSave: 'سيعمل رمز QR بعد حفظ العقار.',
+    agentPortfolio: 'ملف الوكيل',
+    agentQrCode: 'رمز QR الرئيسي للمالك',
+    agentQrDesc: 'هذا الرمز الفريد يربط بجميع عقاراتك. ضعه على بطاقات العمل، موقعك الإلكتروني، أو اللوحات الرئيسية.',
+    portfolioLink: 'رابط الملف العقاري',
+    viewPortfolio: 'عرض الملف العقاري',
+    portfolioTitle: 'عقارات {name}',
+    agentProfile: 'ملف الوكيل',
     searchPlaceholder: 'ابحث عن العقارات بالعنوان أو الموقع...',
     noSearchResults: 'لم يتم العثور على عقارات تطابق بحثك.',
     backToHome: 'العودة للرئيسية',
+    agentPortfolio: 'محفظة العقارات',
+    agentQrCode: 'الرمز الرئيسي للمالك',
+    agentQrDesc: 'هذا الرمز الفريد يربط بجميع عقاراتك. ضعه على بطاقات العمل، موقعك الإلكتروني، أو اللوحات الرئيسية.',
+    portfolioLink: 'رابط المحفظة',
+    viewPortfolio: 'عرض المحفظة',
+    portfolioTitle: 'محفظة عقارات {name}',
+    agentProfile: 'ملف الوكيل',
+    searchPlaceholder: 'البحث عن عقارات بالعنوان أو الموقع...',
+    noSearchResults: 'لم يتم العثور على عقارات تطابق بحثك.',
     profile: 'الملف الشخصي',
     personalProfile: 'الملف الشخصي',
     editProfile: 'تعديل الملف الشخصي',
@@ -950,6 +973,10 @@ const Navbar = ({ user, profile, lang, setLang }: { user: any | null, profile: U
                   <LayoutDashboard className="w-4 h-4" />
                   <span className="hidden sm:inline">{t.dashboard}</span>
                 </Link>
+                <Link to={`/a/${user.uid}`} className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors flex items-center gap-1.5 border-l border-gray-100 pl-4">
+                  <Building2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t.agentPortfolio}</span>
+                </Link>
                 <Link to="/profile" className="w-10 h-10 rounded-full border border-gray-100 overflow-hidden hover:ring-2 hover:ring-emerald-500 transition-all">
                   <img 
                     src={profile?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.displayName || user.displayName || 'User')}&background=10b981&color=fff`} 
@@ -1271,6 +1298,74 @@ const AdminDashboard = ({ user, profile, lang }: { user: any, profile: UserProfi
     <div className="max-w-7xl mx-auto px-4 py-12">
       <WelcomeBanner profile={profile} lang={lang} />
       
+      {/* Agent QR Portfolio Section */}
+      <div className="mb-12">
+        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl p-8 lg:p-12">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            <div className="bg-emerald-50 p-6 rounded-[2.5rem] flex items-center justify-center shrink-0 shadow-inner">
+              <QRCodeSVG 
+                id="agent-portfolio-qr"
+                value={`${window.location.origin}/a/${user.uid}`} 
+                size={180}
+                level="H"
+                includeMargin
+              />
+            </div>
+            <div className="flex-1 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 rounded-full text-emerald-600 text-xs font-bold uppercase tracking-widest mb-4">
+                <QrCode className="w-3.5 h-3.5" />
+                {t.agentQrCode}
+              </div>
+              <h2 className="text-3xl font-black text-gray-900 mb-4">{t.agentPortfolio}</h2>
+              <p className="text-gray-500 text-lg mb-8 max-w-2xl leading-relaxed">
+                {t.agentQrDesc}
+              </p>
+              
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                <button 
+                  onClick={() => {
+                    const svg = document.getElementById('agent-portfolio-qr');
+                    if (!svg) return;
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = () => {
+                      canvas.width = img.width;
+                      canvas.height = img.height;
+                      ctx?.drawImage(img, 0, 0);
+                      const pngFile = canvas.toDataURL('image/png');
+                      const downloadLink = document.createElement('a');
+                      downloadLink.download = `agent-portfolio-qr.png`;
+                      downloadLink.href = pngFile;
+                      downloadLink.click();
+                    };
+                    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+                  }}
+                  className="flex items-center gap-2 px-6 py-3.5 bg-gray-900 text-white font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-gray-200 active:scale-95"
+                >
+                  <Download className="w-5 h-5" />
+                  {t.downloadQrCode}
+                </button>
+                <div className="flex items-center gap-2 p-1.5 bg-gray-50 rounded-2xl border border-gray-100 min-w-0 max-w-full">
+                  <span className="px-3 text-sm font-medium text-gray-400 truncate">{window.location.origin}/a/{user.uid}</span>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/a/${user.uid}`);
+                      alert(t.copied);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-white text-gray-900 font-bold rounded-xl border border-gray-200 hover:bg-gray-50 transition-all shadow-sm shrink-0"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    {t.copyLink}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{t.myProperties}</h1>
@@ -1454,6 +1549,7 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
   const navigate = useNavigate();
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     price: '',
@@ -1526,7 +1622,7 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
       } else {
         await addDoc(collection(db, 'properties'), data);
       }
-      navigate('/admin');
+      setShowSuccess(true);
     } catch (error) {
       handleFirestoreError(error, isEdit ? OperationType.UPDATE : OperationType.CREATE, 'properties');
     } finally {
@@ -1534,14 +1630,75 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
     }
   };
 
-  const toggleAmenity = (amenity: string) => {
-    setFormData(prev => ({
-      ...prev,
-      amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
-        : [...prev.amenities, amenity]
-    }));
+  const downloadPortfolioQR = () => {
+    const svg = document.getElementById('portfolio-qr-success');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `portfolio-qr.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   };
+
+  if (showSuccess) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-[3rem] shadow-2xl shadow-emerald-100 p-8 lg:p-12 border border-emerald-50"
+        >
+          <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-8">
+            <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          </div>
+          <h2 className="text-4xl font-black text-gray-900 mb-4">
+            {isEdit ? 'Property Updated!' : 'Property Published!'}
+          </h2>
+          <p className="text-gray-500 text-lg mb-12">
+            Your property is now live. Your main QR code automatically includes this new listing.
+          </p>
+
+          <div className="bg-gray-50 p-8 rounded-[2.5rem] mb-12 border border-gray-100 inline-block">
+            <QRCodeSVG 
+              id="portfolio-qr-success"
+              value={`${window.location.origin}/a/${user.uid}`} 
+              size={220}
+              level="H"
+              includeMargin
+            />
+            <p className="mt-6 text-sm font-bold text-gray-400 uppercase tracking-widest">{t.agentQrCode}</p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button 
+              onClick={downloadPortfolioQR}
+              className="px-8 py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+              <Download className="w-5 h-5" />
+              {t.downloadQrCode}
+            </button>
+            <button 
+              onClick={() => navigate('/admin')}
+              className="px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+              {t.backToDashboard}
+              <ArrowLeft className="w-5 h-5 rotate-180" />
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading) return <div className="max-w-3xl mx-auto py-20 text-center">Loading...</div>;
 
@@ -1758,7 +1915,7 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
         <div className="lg:col-span-1 space-y-8">
           <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8 sticky top-24">
             <h3 className="text-xl font-bold text-gray-900 mb-6">{t.imagePreview}</h3>
-            <div className="aspect-video bg-gray-100 rounded-2xl overflow-hidden mb-8">
+            <div className="aspect-video bg-gray-100 rounded-2xl overflow-hidden">
               {formData.images[0] ? (
                 <img 
                   src={formData.images[0]} 
@@ -1774,30 +1931,6 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
                 </div>
               )}
             </div>
-
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">{t.previewQr}</h3>
-              <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                {t.previewOnly}
-              </span>
-            </div>
-            <div className="bg-emerald-50 p-6 rounded-2xl flex items-center justify-center relative group">
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl z-10">
-                <span className="text-xs font-bold text-gray-900 bg-white px-4 py-2 rounded-xl shadow-lg border border-gray-100">
-                  {t.previewOnly}
-                </span>
-              </div>
-              <QRCodeSVG 
-                value={propertyUrl || formData.title || 'Property Preview'} 
-                size={150}
-                level="H"
-                includeMargin
-                className={!propertyUrl ? "opacity-50" : ""}
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-4 text-center">
-              {t.qrWillWorkAfterSave}
-            </p>
           </div>
         </div>
       </div>
@@ -1845,26 +1978,6 @@ const LeadList = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
   const appUrl = window.location.origin;
   const propertyUrl = `${appUrl}/p/${id}`;
 
-  const downloadQR = () => {
-    const svg = document.getElementById('property-qr');
-    if (!svg) return;
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx?.drawImage(img, 0, 0);
-      const pngFile = canvas.toDataURL('image/png');
-      const downloadLink = document.createElement('a');
-      downloadLink.download = `property-qr-${id}.png`;
-      downloadLink.href = pngFile;
-      downloadLink.click();
-    };
-    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
-  };
-
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
       <button 
@@ -1875,38 +1988,19 @@ const LeadList = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
         {t.backToDashboard}
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* QR Section */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8 text-center sticky top-24">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">{t.propertyQr}</h3>
-            <div className="bg-gray-50 p-6 rounded-2xl mb-6 inline-block">
-              <QRCodeSVG 
-                id="property-qr"
-                value={propertyUrl} 
-                size={200}
-                level="H"
-                includeMargin
-              />
-            </div>
-            <p className="text-sm text-gray-500 mb-6">
-              {t.printQr}
-            </p>
-            <div className="space-y-3">
-              <button 
-                onClick={downloadQR}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all"
-              >
-                <Download className="w-4 h-4" />
-                {t.downloadQrCode}
-              </button>
+      <div className="max-w-5xl mx-auto">
+        {/* Leads Section */}
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8 lg:p-10">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">{t.viewLeads} {property?.title}</h2>
+            <div className="flex gap-4">
               <button 
                 onClick={() => {
                   navigator.clipboard.writeText(propertyUrl);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all border border-gray-200"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-900 font-bold rounded-xl border border-gray-200 hover:bg-gray-100 transition-all shadow-sm shrink-0"
               >
                 {copied ? (
                   <>
@@ -1920,54 +2014,45 @@ const LeadList = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
                   </>
                 )}
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Leads Section */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8 lg:p-10">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">{t.viewLeads} {property?.title}</h2>
-              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold">
+              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold flex items-center">
                 {leads.length} {t.totalLeads}
               </span>
             </div>
-
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-50 rounded-2xl animate-pulse" />)}
-              </div>
-            ) : leads.length === 0 ? (
-              <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">{t.noLeads}</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {leads.map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-white p-3 rounded-xl shadow-sm">
-                        <UserIcon className="w-6 h-6 text-emerald-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900">{lead.name || t.anonymous}</h4>
-                        <p className="text-sm text-gray-500">{formatDate(lead.createdAt)}</p>
-                      </div>
-                    </div>
-                    <a 
-                      href={`tel:${lead.phone}`}
-                      className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 font-bold rounded-xl border border-emerald-100 hover:bg-emerald-50 transition-all"
-                    >
-                      <Phone className="w-4 h-4" />
-                      {lead.phone}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
+
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-50 rounded-2xl animate-pulse" />)}
+            </div>
+          ) : leads.length === 0 ? (
+            <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+              <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">{t.noLeads}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {leads.map((lead) => (
+                <div key={lead.id} className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-white p-3 rounded-xl shadow-sm">
+                      <UserIcon className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900">{lead.name || t.anonymous}</h4>
+                      <p className="text-sm text-gray-500">{formatDate(lead.createdAt)}</p>
+                    </div>
+                  </div>
+                  <a 
+                    href={`tel:${lead.phone}`}
+                    className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 font-bold rounded-xl border border-emerald-100 hover:bg-emerald-50 transition-all"
+                  >
+                    <Phone className="w-4 h-4" />
+                    {lead.phone}
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1978,6 +2063,7 @@ const PropertyLanding = ({ lang }: { lang: 'en' | 'ar' }) => {
   const t = translations[lang];
   const { id } = useParams();
   const [property, setProperty] = useState<Property | null>(null);
+  const [agent, setAgent] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -2010,20 +2096,27 @@ const PropertyLanding = ({ lang }: { lang: 'en' | 'ar' }) => {
 
   useEffect(() => {
     if (!id) return;
-    const fetchProp = async () => {
+    const fetchPropAndAgent = async () => {
       try {
-        console.log('Fetching property:', id);
         const docRef = doc(db, 'properties', id);
         const docSnap = await getDoc(docRef);
-        console.log('Doc exists:', docSnap.exists());
+        
         if (docSnap.exists()) {
           const data = docSnap.data();
           setProperty({ id: docSnap.id, ...data } as Property);
           
-          // Increment visits (non-blocking)
+          // Increment visits
           updateDoc(docRef, {
             visits: (data.visits || 0) + 1
           }).catch(err => console.warn('Failed to increment visits:', err));
+
+          // Fetch Agent Profile
+          if (data.ownerId) {
+            const agentSnap = await getDoc(doc(db, 'users', data.ownerId));
+            if (agentSnap.exists()) {
+              setAgent(agentSnap.data() as UserProfile);
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching property:', error);
@@ -2031,7 +2124,7 @@ const PropertyLanding = ({ lang }: { lang: 'en' | 'ar' }) => {
         setLoading(false);
       }
     };
-    fetchProp();
+    fetchPropAndAgent();
   }, [id]);
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
@@ -2139,6 +2232,31 @@ const PropertyLanding = ({ lang }: { lang: 'en' | 'ar' }) => {
             </div>
           </div>
 
+          {agent && (
+            <div className="mb-8 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
+                  <img 
+                    src={agent.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(agent.displayName || 'User')}&background=10b981&color=fff`} 
+                    className="w-full h-full object-cover" 
+                    alt="Agent" 
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest">{t.agentProfile}</p>
+                  <p className="text-sm font-bold text-gray-900">{agent.displayName}</p>
+                </div>
+              </div>
+              <Link 
+                to={`/a/${agent.uid}`}
+                className="text-xs font-bold text-emerald-700 underline flex items-center gap-1"
+              >
+                {t.viewPortfolio}
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
+          )}
+
         <div className="flex flex-wrap gap-2 mb-8">
           <div className="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider">
             {t[property.type as keyof typeof t] || property.type}
@@ -2218,11 +2336,11 @@ const PropertyLanding = ({ lang }: { lang: 'en' | 'ar' }) => {
                   <div className="relative">
                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-300" />
                     <input 
-                      type="text"
+                      type="text" 
                       placeholder={t.namePlaceholder}
                       value={leadData.name}
                       onChange={e => setLeadData({ ...leadData, name: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:outline-none transition-all placeholder:text-emerald-200"
+                      className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:outline-none transition-all placeholder:text-emerald-200 text-white"
                     />
                   </div>
                   <div className="relative">
@@ -2233,13 +2351,13 @@ const PropertyLanding = ({ lang }: { lang: 'en' | 'ar' }) => {
                       placeholder={t.phonePlaceholder}
                       value={leadData.phone}
                       onChange={e => setLeadData({ ...leadData, phone: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:outline-none transition-all placeholder:text-emerald-200"
+                      className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:outline-none transition-all placeholder:text-emerald-200 text-white"
                     />
                   </div>
                   <button 
                     disabled={submitting}
                     type="submit"
-                    className="w-full py-4 bg-white text-emerald-600 font-bold rounded-2xl hover:bg-emerald-50 transition-all shadow-lg shadow-black/10 disabled:opacity-50"
+                    className="w-full py-4 bg-white text-emerald-600 font-bold rounded-2xl hover:bg-emerald-50 transition-all shadow-lg shadow-black/10 disabled:opacity-50 mt-2"
                   >
                     {submitting ? 'Submitting...' : t.submitInterest}
                   </button>
@@ -2248,6 +2366,148 @@ const PropertyLanding = ({ lang }: { lang: 'en' | 'ar' }) => {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+const AgentPortfolio = ({ lang }: { lang: 'en' | 'ar' }) => {
+  const t = translations[lang];
+  const { ownerId } = useParams();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [agent, setAgent] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!ownerId) return;
+
+    const fetchData = async () => {
+      try {
+        // Fetch Agent
+        const agentSnap = await getDoc(doc(db, 'users', ownerId));
+        if (agentSnap.exists()) {
+          setAgent(agentSnap.data() as UserProfile);
+        }
+
+        // Fetch Properties
+        const q = query(
+          collection(db, 'properties'),
+          where('ownerId', '==', ownerId),
+          orderBy('createdAt', 'desc')
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          setProperties(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)));
+          setLoading(false);
+        });
+        return unsubscribe;
+      } catch (err) {
+        console.error('Error fetching portfolio:', err);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [ownerId]);
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!agent) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 text-center">
+      <UserIcon className="w-20 h-20 text-gray-300 mb-6" />
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Agent Not Found</h1>
+      <Link to="/" className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-2xl mt-8">Go Home</Link>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50/50 pb-32">
+      <div className="bg-emerald-950 py-20 mb-12 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-800 rounded-full blur-[100px] opacity-20 -mr-48 -mt-48" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-700 rounded-full blur-[100px] opacity-20 -ml-48 -mb-48" />
+        
+        <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
+          <div className="w-32 h-32 rounded-[2.5rem] overflow-hidden border-4 border-white/10 ring-4 ring-white/5 shadow-2xl mx-auto mb-8">
+            <img 
+              src={agent.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(agent.displayName || 'User')}&background=10b981&color=fff`} 
+              className="w-full h-full object-cover" 
+              alt="Profile" 
+            />
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-black text-white mb-4">
+            {t.portfolioTitle.replace('{name}', agent.displayName || 'Agent')}
+          </h1>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-800/50 rounded-full text-emerald-400 text-xs font-bold uppercase tracking-widest">
+            <Building2 className="w-3.5 h-3.5" />
+            {properties.length} {t.myProperties}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4">
+        {properties.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
+            <Building2 className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+            <p className="text-gray-500 font-bold">{t.noProperties}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {properties.map((prop) => (
+              <motion.div 
+                key={prop.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300"
+              >
+                <div className="relative h-56 overflow-hidden">
+                  <img 
+                    src={prop.images?.[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1000'} 
+                    alt={prop.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full text-base font-black text-emerald-700 shadow-lg">
+                    {formatCurrency(prop.price)}
+                  </div>
+                </div>
+                
+                <div className="p-8">
+                  <h3 className="text-2xl font-black text-gray-900 mb-2 line-clamp-1 group-hover:text-emerald-600 transition-colors">{prop.title}</h3>
+                  <div className="flex items-center gap-2 text-gray-500 text-sm mb-6">
+                    <MapPin className="w-4 h-4 text-emerald-600" />
+                    <span className="line-clamp-1 font-medium">{prop.location}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 mb-8">
+                    <div className="bg-gray-50 p-3 rounded-2xl text-center">
+                      <Bed className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
+                      <div className="text-sm font-bold text-gray-900">{prop.rooms}</div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-2xl text-center">
+                      <Bath className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
+                      <div className="text-sm font-bold text-gray-900">{prop.bathrooms}</div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-2xl text-center">
+                      <Maximize2 className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
+                      <div className="text-sm font-bold text-gray-900">{prop.area}</div>
+                    </div>
+                  </div>
+
+                  <Link 
+                    to={`/p/${prop.id}`}
+                    className="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-100"
+                  >
+                    {t.viewPage}
+                    <ExternalLink className="w-4 h-4" />
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2419,6 +2679,44 @@ const ProfilePage = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
               </button>
             </div>
           </form>
+
+          {/* Portfolio QR Section on Profile */}
+          <div className="px-8 lg:px-12 pb-12 border-t border-gray-50 pt-12 text-center">
+            <div className="bg-emerald-50 p-12 rounded-[3.5rem] border border-emerald-100 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-200 rounded-full blur-3xl opacity-20 -mr-32 -mt-32"></div>
+              
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full text-emerald-600 text-xs font-bold uppercase tracking-widest mb-6 border border-emerald-100 shadow-sm">
+                  <QrCode className="w-3.5 h-3.5" />
+                  {t.agentQrCode}
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">{t.agentPortfolio}</h3>
+                <p className="text-gray-500 text-sm mb-8 leading-relaxed max-w-sm mx-auto">
+                  {t.agentQrDesc}
+                </p>
+
+                <div className="bg-white p-6 rounded-[2.5rem] inline-block shadow-2xl shadow-emerald-100 border border-emerald-50 mb-8 transform transition-transform group-hover:scale-105">
+                  <QRCodeSVG 
+                    id="profile-portfolio-qr"
+                    value={`${window.location.origin}/a/${user.uid}`} 
+                    size={160}
+                    level="H"
+                    includeMargin
+                  />
+                </div>
+
+                <div className="flex justify-center">
+                  <Link 
+                    to={`/a/${user.uid}`}
+                    className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-xs font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-lg"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    {t.viewPortfolio}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2490,6 +2788,7 @@ export default function App() {
           <Route path="/" element={<Home lang={lang} user={user} />} />
           <Route path="/auth" element={<AuthPage lang={lang} />} />
           <Route path="/p/:id" element={<PropertyLanding lang={lang} />} />
+          <Route path="/a/:ownerId" element={<AgentPortfolio lang={lang} />} />
           <Route path="/profile" element={user ? <ProfilePage user={user} lang={lang} /> : <Home lang={lang} user={user} />} />
           
           {/* Protected Admin Routes */}
