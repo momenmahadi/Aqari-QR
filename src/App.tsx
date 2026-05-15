@@ -2381,6 +2381,8 @@ const AgentPortfolio = ({ lang }: { lang: 'en' | 'ar' }) => {
   useEffect(() => {
     if (!ownerId) return;
 
+    let unsubscribeProperties: (() => void) | undefined;
+
     const fetchData = async () => {
       try {
         // Fetch Agent
@@ -2395,17 +2397,25 @@ const AgentPortfolio = ({ lang }: { lang: 'en' | 'ar' }) => {
           where('ownerId', '==', ownerId),
           orderBy('createdAt', 'desc')
         );
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        
+        unsubscribeProperties = onSnapshot(q, (snapshot) => {
           setProperties(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)));
           setLoading(false);
+        }, (error) => {
+          console.error('Error fetching properties:', error);
+          setLoading(false);
         });
-        return unsubscribe;
       } catch (err) {
         console.error('Error fetching portfolio:', err);
         setLoading(false);
       }
     };
+    
     fetchData();
+
+    return () => {
+      if (unsubscribeProperties) unsubscribeProperties();
+    };
   }, [ownerId]);
 
   if (loading) return (
