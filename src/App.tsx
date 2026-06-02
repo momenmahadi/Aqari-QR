@@ -314,175 +314,45 @@ const translations = {
 
 // --- Components ---
 
-
-const QuickAddModal = ({ user, lang, isOpen, onClose }: { user: any, lang: 'en' | 'ar', isOpen: boolean, onClose: () => void }) => {
-  const t = translations[lang];
-  const navigate = useNavigate();
-  const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    price: '',
-    location: '',
-    type: 'apartment',
-    status: 'sale',
-    images: [] as string[]
-  });
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach((file: File) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          images: [...prev.images, reader.result as string]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    
-    const data = {
-      title: formData.title,
-      price: parseFloat(formData.price),
-      location: formData.location,
-      type: formData.type,
-      status: formData.status,
-      rooms: 0,
-      bathrooms: 0,
-      area: 0,
-      description: '',
-      amenities: [],
-      images: formData.images,
-      ownerId: user.uid,
-      createdAt: serverTimestamp(),
-      visits: 0
-    };
-
-    try {
-      const docRef = await addDoc(collection(db, 'properties'), data);
-      onClose();
-      navigate(`/admin/leads/${docRef.id}`);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'properties');
-    } finally {
-      setSaving(false);
+const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 600): Promise<string> => {
+  return new Promise((resolve) => {
+    if (!base64Str || !base64Str.startsWith('data:image/')) {
+      resolve(base64Str);
+      return;
     }
-  };
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
 
-  if (!isOpen) return null;
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
-      >
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">{t.quickAdd}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t.propertyTitle}</label>
-            <input 
-              required
-              type="text"
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 outline-none"
-              placeholder="Modern Apartment"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t.price}</label>
-              <input 
-                required
-                type="number"
-                value={formData.price}
-                onChange={e => setFormData({ ...formData, price: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 outline-none"
-                placeholder="Price"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t.typeLabel}</label>
-              <select 
-                value={formData.type}
-                onChange={e => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 outline-none"
-              >
-                <option value="apartment">{t.apartment}</option>
-                <option value="villa">{t.villa}</option>
-                <option value="office">{t.office}</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t.location}</label>
-            <input 
-              required
-              type="text"
-              value={formData.location}
-              onChange={e => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 outline-none"
-              placeholder="City, Area"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t.images}</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.images.map((img, i) => (
-                <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
-                  <img src={img} className="w-full h-full object-cover" alt="Preview" />
-                  <button 
-                    type="button"
-                    onClick={() => setFormData({ ...formData, images: formData.images.filter((_, idx) => idx !== i) })}
-                    className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl-lg"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-              <label className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-colors">
-                <Plus className="w-5 h-5 text-gray-400" />
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  multiple 
-                  className="hidden" 
-                  onChange={handleFileChange} 
-                />
-              </label>
-            </div>
-          </div>
-
-          <button 
-            disabled={saving}
-            type="submit"
-            className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 mt-2"
-          >
-            {saving ? t.saving : t.createProperty}
-          </button>
-        </form>
-      </motion.div>
-    </div>
-  );
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      const compressedStr = canvas.toDataURL('image/jpeg', 0.65);
+      resolve(compressedStr);
+    };
+    img.onerror = () => {
+      resolve(base64Str);
+    };
+    img.src = base64Str;
+  });
 };
+
 
 const AuthPage = ({ lang }: { lang: 'en' | 'ar' }) => {
   const t = translations[lang];
@@ -917,7 +787,6 @@ const NotificationBell = ({ user, lang }: { user: any, lang: 'en' | 'ar' }) => {
 };
 
 const Navbar = ({ user, profile, lang, setLang }: { user: any | null, profile: UserProfile | null, lang: 'en' | 'ar', setLang: (l: 'en' | 'ar') => void }) => {
-  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const t = translations[lang];
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
@@ -956,13 +825,6 @@ const Navbar = ({ user, profile, lang, setLang }: { user: any | null, profile: U
                 {user && <NotificationBell user={user} lang={lang} />}
                 {user ? (
                   <>
-                    <button 
-                      onClick={() => setIsQuickAddOpen(true)}
-                      className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-lg shadow-emerald-100 transition-all"
-                    >
-                      <Plus className="w-4 h-4" />
-                      {t.newListing}
-                    </button>
                     <Link to="/admin" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors flex items-center gap-1.5">
                       <LayoutDashboard className="w-4 h-4" />
                       <span className="hidden sm:inline">{t.dashboard}</span>
@@ -1000,14 +862,6 @@ const Navbar = ({ user, profile, lang, setLang }: { user: any | null, profile: U
           </div>
         </div>
       </div>
-      {user && (
-        <QuickAddModal 
-          user={user} 
-          lang={lang} 
-          isOpen={isQuickAddOpen} 
-          onClose={() => setIsQuickAddOpen(false)} 
-        />
-      )}
     </nav>
   );
 };
@@ -1550,6 +1404,7 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     price: '',
@@ -1610,6 +1465,7 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setError(null);
     
     const data: any = {
       ...formData,
@@ -1623,6 +1479,7 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
     if (!isEdit) {
       data.ownerId = user.uid;
       data.createdAt = serverTimestamp();
+      data.visits = 0;
     }
 
     try {
@@ -1632,8 +1489,14 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
         await addDoc(collection(db, 'properties'), data);
       }
       setShowSuccess(true);
-    } catch (error) {
-      handleFirestoreError(error, isEdit ? OperationType.UPDATE : OperationType.CREATE, 'properties');
+    } catch (err: any) {
+      console.error("Error saving property listing:", err);
+      setError(err?.message || "An unexpected error occurred while saving the listing.");
+      try {
+        handleFirestoreError(err, isEdit ? OperationType.UPDATE : OperationType.CREATE, 'properties');
+      } catch (inner) {
+        // Log/propagate but keep app working
+      }
     } finally {
       setSaving(false);
     }
@@ -1730,6 +1593,15 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
             <h1 className="text-3xl font-bold text-gray-900 mb-8">
               {isEdit ? t.editProperty : t.addNewProperty}
             </h1>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-2xl border border-red-100 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                  <X className="w-4 h-4 text-red-600" />
+                </div>
+                <span className="text-sm font-medium">{error}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1895,10 +1767,11 @@ const PropertyForm = ({ user, lang, isEdit = false }: { user: any, lang: 'en' | 
                         if (!files) return;
                         Array.from(files).forEach((file: File) => {
                           const reader = new FileReader();
-                          reader.onloadend = () => {
+                          reader.onloadend = async () => {
+                            const compressed = await compressImage(reader.result as string);
                             setFormData(prev => ({
                               ...prev,
-                              images: [...prev.images.filter(img => img.trim() !== ''), reader.result as string]
+                              images: [...prev.images.filter(img => img.trim() !== ''), compressed]
                             }));
                           };
                           reader.readAsDataURL(file);

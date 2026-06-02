@@ -49,4 +49,5 @@ export interface UserProfile {
   displayName: string;
   photoURL?: string;
   role: 'admin' | 'user';
+  portfolioVisits?: number;
 }
